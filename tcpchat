@@ -1,9 +1,44 @@
 #! /usr/bin/env node
 
-process.stdin.on('data',function(x){
-	console.log('(' + x.length + ')--> ' + x)
-});
+var net = require('net');
 
 var args = process.argv.slice(2);
+var currentSocket;
 
-console.log(args);
+function send (txt) {
+	if (currentSocket && currentSocket.writable) {
+		currentSocket.write(txt);
+	}
+}
+
+if (args.length < 2) {
+	console.log('must either specify address and port or run as -server\n');
+	process.exit();
+}
+
+var host = args[0];
+var port = args[1];
+
+process.stdout.write('> ');
+process.stdin.on('data',function(x){
+	send(x);
+	setTimeout(function(){
+		process.stdout.write('> ');
+	},200);
+});
+
+if (host == '-server') {
+
+}
+else {
+	currentSocket = net.createConnection({
+		host: host,
+		port: port
+	})
+	.on('data',function(x){
+		console.log(x.toString('utf8'));
+	})
+	.on('end',function(){
+		process.exit();
+	});
+}
