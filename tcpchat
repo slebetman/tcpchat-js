@@ -3,3 +3,7 @@
 process.stdin.on('data',function(x){
 	console.log('(' + x.length + ')--> ' + x)
 });
+
+var args = process.argv.slice(2);
+
+console.log(args);
