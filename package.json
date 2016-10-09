@@ -1,0 +1,11 @@
+{
+  "name": "tcpchat",
+  "version": "1.0.0",
+  "description": "Useful for debugging text based network protocols",
+  "main": "tcpchat.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "slebetman@gmail.com",
+  "license": "BSD-2-Clause"
+}
