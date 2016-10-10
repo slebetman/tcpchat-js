@@ -1,14 +1,66 @@
 #! /usr/bin/env node
 
 var net = require('net');
+var chalk = require('chalk');
 
 var args = process.argv.slice(2);
 var currentSocket;
 
-function send (txt) {
-	if (currentSocket && currentSocket.writable) {
-		currentSocket.write(txt);
+function SocketList () {
+	this.next_id = 1;
+	this.sockets = {};
+}
+
+SocketList.prototype = {
+	add: function (socket) {
+		var id = 'sock' + this.next_id++;
+		this.sockets[id] = socket;
+		socket.socketlist_id = id;
+		socket.on('connect',function(){
+			console.log(chalk.bgCyan('new connection ' + id + ' '));
+		});
+		return id;
+	},
+	remove: function (item) {
+		var id = item;
+		if (item instanceof net.Socket) {
+			id = item.socketlist_id;
+		}
+	},
+	get: function (id) {
+		return this.sockets[id];
+	},
+	list: function () {
+		return Object.keys(this.sockets);
 	}
+}
+
+var sockets = new SocketList();
+
+function send (txt) {
+	var sock = sockets.get(currentSocket);
+	if (sock && sock.writable) {
+		sock.write(txt);
+	}
+}
+
+function recv (sock_id) {
+	return function(x){
+		console.log(
+			x.toString('utf8')
+				.split('\n')
+				.map(function(x){
+					return chalk.inverse(sock_id + '<-') + ' ' + x;
+				})
+				.join('\n')
+		);
+	}
+}
+
+function prompt () {
+	setTimeout(function(){
+		process.stdout.write(currentSocket + '-> ');
+	},200);
 }
 
 if (args.length < 2) {
@@ -19,26 +71,30 @@ if (args.length < 2) {
 var host = args[0];
 var port = args[1];
 
-process.stdout.write('> ');
-process.stdin.on('data',function(x){
-	send(x);
-	setTimeout(function(){
-		process.stdout.write('> ');
-	},200);
-});
+function init_console () {
+	prompt();
+	process.stdin.on('data',function(x){
+		send(x);
+		prompt();
+	});
+}
 
 if (host == '-server') {
 
 }
 else {
-	currentSocket = net.createConnection({
+	sock = net.createConnection({
 		host: host,
 		port: port
-	})
-	.on('data',function(x){
-		console.log(x.toString('utf8'));
-	})
-	.on('end',function(){
-		process.exit();
 	});
+	
+	var sock_id = sockets.add(sock);
+	currentSocket = sock_id;
+	
+	sock.on('data',recv(sock_id))
+		.on('end',function(){
+			sockets.remove(sock_id);
+			process.exit();
+		})
+		.on('connect',init_console);
 }
