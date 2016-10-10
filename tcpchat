@@ -26,6 +26,8 @@ SocketList.prototype = {
 		if (item instanceof net.Socket) {
 			id = item.socketlist_id;
 		}
+		console.log(chalk.bgYellow('closing connection ' + id + ' '));
+		delete this.sockets[id];
 	},
 	get: function (id) {
 		return this.sockets[id];
@@ -72,9 +74,31 @@ var host = args[0];
 var port = args[1];
 
 function init_console () {
+	console.log(chalk.inverse('type /help for help '));
 	prompt();
 	process.stdin.on('data',function(x){
-		send(x);
+		var command = x.toString('utf8').replace('\n','').split(/s\+/);
+		
+		switch (command[0]) {
+		case '/help':
+			console.log([
+				'Available commands:',
+				'/exit               - terminate this program',
+				'/list               - list all open sockets',
+				// '/switch <socket>    - change current socket',
+				// '/close <socket>     - terminate socket connection',
+				'<text...>           - send text to current socket'
+			].join('\n') + '\n');
+			break;
+		case '/exit':
+			process.exit();
+			break;
+		case '/list':
+			console.log(sockets.list().join('\n'));
+			break;
+		default:
+			send(x);
+		}
 		prompt();
 	});
 }
