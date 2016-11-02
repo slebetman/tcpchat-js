@@ -96,6 +96,8 @@ function init_console () {
 		case '/list':
 			console.log(sockets.list().join('\n'));
 			break;
+		case '/switch':
+		case '/close':
 		default:
 			send(x);
 		}
@@ -120,5 +122,9 @@ else {
 			sockets.remove(sock_id);
 			process.exit();
 		})
-		.on('connect',init_console);
+		.on('connect',init_console)
+		.on('error',function(err){
+			console.log(err.toString());
+			process.exit();
+		});
 }
