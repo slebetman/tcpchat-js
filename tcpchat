@@ -99,7 +99,13 @@ function init_console () {
 			process.exit();
 			break;
 		case '/list':
-			console.log(sockets.list().join('\n'));
+			console.log(sockets.list()
+				.map(x=>{
+					var isCurrent = x == currentSocket ? ' (current)' : '';
+					return x + ' ' + sockets.get(x).remoteAddress + isCurrent;
+				})
+				.join('\n')
+			);
 			break;
 		case '/switch':
 			if (sockets.get(command[1])) {
