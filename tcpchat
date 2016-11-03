@@ -16,9 +16,9 @@ SocketList.prototype = {
 		var id = 'sock' + this.next_id++;
 		this.sockets[id] = socket;
 		socket.socketlist_id = id;
-		socket.on('connect',function(){
-			console.log(chalk.bgCyan('new connection ' + id + ' '));
-		});
+		console.log(chalk.bgCyan('\rnew connection ' + id + ' '));
+		prompt();
+		
 		return id;
 	},
 	remove: function (item) {
@@ -26,7 +26,8 @@ SocketList.prototype = {
 		if (item instanceof net.Socket) {
 			id = item.socketlist_id;
 		}
-		console.log(chalk.bgYellow('closing connection ' + id + ' '));
+		console.log(chalk.bgYellow('\rclosing connection ' + id + ' '));
+		prompt();
 		delete this.sockets[id];
 	},
 	get: function (id) {
@@ -50,6 +51,7 @@ function recv (sock_id) {
 	return function(x){
 		console.log('\r' + 
 			x.toString('utf8')
+				.trimRight('\n')
 				.split('\n')
 				.map(function(x){
 					return chalk.inverse(sock_id + '<-') + ' ' + x;
@@ -64,7 +66,7 @@ function prompt () {
 	setTimeout(function(){
 		var s = currentSocket || '';
 	
-		process.stdout.write(s + '-> ');
+		process.stdout.write('\r' + s + '-> ');
 	},200);
 }
 
@@ -119,15 +121,16 @@ function registerSocket (sock) {
 	
 	sock.on('data',recv(sock_id));
 	
-	return sock;
+	return sock_id;
 }
 
 if (host == '-server') {
 	net.createServer(function(sock){
-		registerSocket(sock);
-	})
-	.on('end',function(){
-		sockets.remove(sock_id);
+		var sock_id = registerSocket(sock);
+		
+		sock.on('end',function(){
+			sockets.remove(sock_id);
+		})
 	})
 	.on('error',die)
 	.listen(port,init_console);
@@ -138,8 +141,8 @@ else {
 		port: port
 	});
 	
-	registerSocket(sock)
-		.on('connect',init_console)
+	var sock_id = registerSocket(sock);
+	sock.on('connect',init_console)
 		.on('end',function(){
 			sockets.remove(sock_id);
 			process.exit();
