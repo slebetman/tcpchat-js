@@ -82,7 +82,7 @@ function init_console () {
 	console.log(chalk.inverse('type /help for help '));
 	prompt();
 	process.stdin.on('data',function(x){
-		var command = x.toString('utf8').replace('\n','').split(/s\+/);
+		var command = x.toString('utf8').replace('\n','').split(/\s+/);
 		
 		switch (command[0]) {
 		case '/help':
@@ -90,7 +90,7 @@ function init_console () {
 				'Available commands:',
 				'/exit               - terminate this program',
 				'/list               - list all open sockets',
-				// '/switch <socket>    - change current socket',
+				'/switch <socket>    - change current socket',
 				// '/close <socket>     - terminate socket connection',
 				'<text...>           - send text to current socket'
 			].join('\n') + '\n');
@@ -102,6 +102,16 @@ function init_console () {
 			console.log(sockets.list().join('\n'));
 			break;
 		case '/switch':
+			if (sockets.get(command[1])) {
+				currentSocket = command[1];
+			}
+			else {
+				console.log(
+					'ERROR: socket ' + command[1] +
+					' does not exist'
+				);
+			}
+			break;
 		case '/close':
 		default:
 			send(x);
