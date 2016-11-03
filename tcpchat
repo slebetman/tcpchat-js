@@ -48,7 +48,7 @@ function send (txt) {
 
 function recv (sock_id) {
 	return function(x){
-		console.log(
+		console.log('\r' + 
 			x.toString('utf8')
 				.split('\n')
 				.map(function(x){
@@ -56,6 +56,7 @@ function recv (sock_id) {
 				})
 				.join('\n')
 		);
+		prompt();
 	}
 }
 
@@ -105,26 +106,41 @@ function init_console () {
 	});
 }
 
-if (host == '-server') {
+function die (err) {
+	console.log(err.toString());
+	process.exit();
+}
 
+function registerSocket (sock) {
+	var sock_id = sockets.add(sock);
+	currentSocket = sock_id;
+	
+	sock.on('data',recv(sock_id));
+	
+	return sock;
+}
+
+if (host == '-server') {
+	net.createServer(function(sock){
+		registerSocket(sock);
+	})
+	.on('end',function(){
+		sockets.remove(sock_id);
+	})
+	.on('error',die)
+	.listen(port,init_console);
 }
 else {
-	sock = net.createConnection({
+	var sock = net.createConnection({
 		host: host,
 		port: port
 	});
 	
-	var sock_id = sockets.add(sock);
-	currentSocket = sock_id;
-	
-	sock.on('data',recv(sock_id))
+	registerSocket(sock)
+		.on('connect',init_console)
 		.on('end',function(){
 			sockets.remove(sock_id);
 			process.exit();
 		})
-		.on('connect',init_console)
-		.on('error',function(err){
-			console.log(err.toString());
-			process.exit();
-		});
+		.on('error',die);
 }
