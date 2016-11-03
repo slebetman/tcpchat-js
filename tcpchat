@@ -130,6 +130,9 @@ if (host == '-server') {
 		
 		sock.on('end',function(){
 			sockets.remove(sock_id);
+			if (currentSocket == sock_id) {
+				currentSocket = null;
+			}
 		})
 	})
 	.on('error',die)
@@ -144,7 +147,6 @@ else {
 	var sock_id = registerSocket(sock);
 	sock.on('connect',init_console)
 		.on('end',function(){
-			sockets.remove(sock_id);
 			process.exit();
 		})
 		.on('error',die);
