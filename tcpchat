@@ -62,7 +62,9 @@ function recv (sock_id) {
 
 function prompt () {
 	setTimeout(function(){
-		process.stdout.write(currentSocket + '-> ');
+		var s = currentSocket || '';
+	
+		process.stdout.write(s + '-> ');
 	},200);
 }
 
