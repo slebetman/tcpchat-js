@@ -91,7 +91,7 @@ function init_console () {
 				'/exit               - terminate this program',
 				'/list               - list all open sockets',
 				'/switch <socket>    - change current socket',
-				// '/close <socket>     - terminate socket connection',
+				'/close <socket>     - terminate socket connection',
 				'<text...>           - send text to current socket'
 			].join('\n') + '\n');
 			break;
@@ -119,6 +119,36 @@ function init_console () {
 			}
 			break;
 		case '/close':
+			var sock_id = command[1];
+			
+			if (!sock_id) {
+				var s = sockets.get(currentSocket);
+				if (s) {
+					s.end();
+					currentSocket = null;
+				}
+				else {
+					console.log(
+						'ERROR: there is no current socket'
+					);
+				}
+			}
+			else {
+				var s = sockets.get(sock_id);
+				if (s) {
+					s.end();
+					if (currentSocket == sock_id) {
+						currentSocket = null;
+					}
+				}
+				else {
+					console.log(
+						'ERROR: socket ' + command[1] +
+						' does not exist'
+					);
+				}
+			}
+			break;
 		default:
 			send(x);
 		}
